@@ -89,14 +89,18 @@ crud.post('/insertAssetPoint', function (req, res) {
       querystring += geometryString + ")";
   
       // Execute the query
-      client.query(querystring,function(err,result) {
-               done(); 
-               if(err){
-                   console.log(err);
-                   res.status(400).send(err);
-               }
-               res.status(200).send(result.rows);
-           });
+      client.query(querystring, [assetName, installationDate], function (err, result) {
+        // Release the client back to the pool
+        done();
+  
+        if (err) {
+          console.log(err);
+          res.status(400).send(err);
+        } 
+        else {
+          res.status(200).send("Form Data "+ req.body.asset_name + " has been inserted");
+        }
+      });
     });
   });
 
@@ -120,6 +124,10 @@ crud.post('/insertConditionInformation', function (req, res) {
         console.log("not able to get connection " + err);
         res.status(400).send(err);
       }
+      let asset_name = req.body.asset_name;
+      let condition_description = req.body.condition_description
+      console.log(asset_name)
+      console.log(condition_description)
   
       // Construct the query string
       let querystring = "INSERT into cege0043.asset_condition_information (asset_id, condition_id) values (";
@@ -127,7 +135,7 @@ crud.post('/insertConditionInformation', function (req, res) {
 
   
       // Execute the query
-      client.query(querystring,function(err,result) {
+      client.query(querystring, [asset_name, condition_description], function(err,result) {
         done(); 
         if(err){
             console.log(err);
