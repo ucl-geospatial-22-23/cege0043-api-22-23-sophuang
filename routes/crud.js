@@ -104,7 +104,46 @@ crud.post('/insertAssetPoint', function (req, res) {
     });
   });
 
+/*
+  -- ENDPOINT
+crud.post(/insertConditionInformation/,....
+
+-- REMINDER:  use req.body.xxx to get the parameters
+-- Note that this SQL assumes  that you have the correct name for the asset and that you also have the correct full text for the condition value as your parameters
+
+
+-- SQL
+	var querystring = "INSERT into cege0043.asset_condition_information (asset_id, condition_id) values (";
+	querystring += "(select id from cege0043.asset_information where asset_name = $1),(select id from cege0043.asset_condition_options where condition_description = $2))";
+
+*/
+crud.post('/insertConditionInformation', function (req, res) {
+    pool.connect(function (err, client, done) {
+    
+      if (err) {
+        console.log("not able to get connection " + err);
+        res.status(400).send(err);
+      }
+      let asset_name = req.body.asset_name;
+      let condition_description = req.body.condition_description
+      console.log(asset_name)
+      console.log(condition_description)
+  
+      // Construct the query string
+      let querystring = "INSERT into cege0043.asset_condition_information (asset_id, condition_id) values (";
+	  querystring += "(select id from cege0043.asset_information where asset_name = $1),(select id from cege0043.asset_condition_options where condition_description = $2))";
 
   
+      // Execute the query
+      client.query(querystring, [asset_name, condition_description], function(err,result) {
+        done(); 
+        if(err){
+            console.log(err);
+            res.status(400).send(err);
+        }
+        res.status(200).send(result.rows);
+    });
+    });
+  });
 
 module.exports = crud;
