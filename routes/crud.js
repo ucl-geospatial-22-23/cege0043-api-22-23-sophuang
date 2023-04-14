@@ -1,3 +1,4 @@
+"use strict";
 let express = require('express'); 
 let pg = require('pg');
 let crud = require('express').Router();
@@ -15,9 +16,12 @@ let config = {};
 for (let i = 0; i < configarray.length; i++) {
 let split = configarray[i].split(':');
 config[split[0].trim()] = split[1].trim(); }
-let pool = new pg.Pool(config); console.log(config);
+let pool = new pg.Pool(config); 
+console.log(config);
 
 const bodyParser = require('body-parser'); crud.use(bodyParser.urlencoded({ extended: true }));
+
+
 
 // test endpoint for GET requests (can be called from a browser URL or AJAX) 
 crud.get('/testCRUD',function (req,res) {
@@ -29,10 +33,29 @@ crud.post('/testCRUD',function (req,res) {
 });
 
 
+// Test userid endpoint
+
+crud.get('/userId', function (req,res) {
+    //res.json({message:req.originalUrl+" " +"GET REQUEST"}); 
+    pool.connect(function(err,client,done) {
+           if(err){
+               console.log("not able to get connection "+ err);
+               res.status(400).send(err);
+           } 
+    var querystring = "select user_id from ucfscde.users where user_name = current_user;";
+           client.query(querystring,function(err,result) {
+               done(); 
+               if(err){
+                   console.log(err);
+                   res.status(400).send(err);
+               }
+               res.status(200).send(result.rows);
+           });
+        });
+    });
 
 
 
-
-
+  
 
 module.exports = crud;
