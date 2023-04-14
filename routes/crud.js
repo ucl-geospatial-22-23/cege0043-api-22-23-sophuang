@@ -179,12 +179,38 @@ crud.post('/deleteAsset', (req, res) => {
             console.log(err);
             res.status(400).send(err);
         }
-        res.status(200).send("If this record is yours, then form data ID "+ id+ " has been deleted. If you did not insert this record, then no change has been made");
+        res.status(200).send("If this record is yours, then form data ID "+ delete_id+ " has been deleted. If you did not insert this record, then no change has been made");
     }); });
     });
 
+/*    
+    -- delete a condition report
+    crud.post(/deleteConditionReport/,...
+    -- REMINDER:  use req.body.xxx to get the parameters
+    
+    var querystring = "DELETE from cege0043.asset_condition_information where id = $1";
+*/
+crud.post('/deleteConditionReport', (req, res) => {
+    pool.connect(function (err, client, done) {
+    
+      if (err) {
+        console.log("not able to get connection " + err);
+        res.status(400).send(err);
+      }
+      let delete_id = req.body.delete_id;
 
-
-
+      // Construct the query string
+      let querystring = "DELETE from cege0043.asset_condition_information where id = $1;";
+  
+      // Execute the query
+      client.query(querystring, [delete_id], function(err,result) {
+        done(); 
+        if(err){
+            console.log(err);
+            res.status(400).send(err);
+        }
+        res.status(200).send("If this record is yours, then form data ID "+ delete_id+ " has been deleted. If you did not insert this record, then no change has been made");
+    }); });
+    });
 
 module.exports = crud;
