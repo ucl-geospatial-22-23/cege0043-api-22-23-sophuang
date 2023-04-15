@@ -277,7 +277,60 @@ geoJSON.get('/userRanking/:user_id', function (req, res) {
    });
 
 
+/*
+   ------------------------------------------------------
+   -- REFERENCE L1
+   -- Asset Location App: list of all the assets with at least one report saying that they are in the best condition  (via a menu option) 
+   -- Return result as a JSON list
+   
+   -- ENDPOINT
+   -- geoJSON.get(/assetsInGreatCondition, ... 
+   
+   
+   select array_to_json (array_agg(d)) from
+   (select c.* from cege0043.asset_information c
+   inner join 
+   (select count(*) as best_condition, asset_id from cege0043.asset_condition_information where 
+   condition_id in (select id from cege0043.asset_condition_options where condition_description like '%very good%')
+   group by asset_id
+   order by best_condition desc) b
+   on b.asset_id = c.id) d;
+*/
 
+geoJSON.get('/assetsInGreatCondition', function (req, res) {
+    pool.connect(function (err, client, done) {
+      if (err) {
+        console.log("not able to get connection " + err);
+        res.status(400).send(err);
+      }
+   
+       // first get a list of the columns that are in the table 
+       // use string_agg to generate a comma separated list that can then be pasted into the next query
+
+
+       var querystring = "select array_to_json (array_agg(d)) from ";
+      querystring += "(select c.* from cege0043.asset_information c ";
+      querystring += "inner join ";
+      querystring += "(select count(*) as best_condition, asset_id from cege0043.asset_condition_information where ";
+      querystring += "condition_id in (select id from cege0043.asset_condition_options where condition_description like '%very good%') ";
+      querystring += "group by asset_id ";
+      querystring += "order by best_condition desc) b ";
+      querystring += "on b.asset_id = c.id) d;";
+   
+        console.log(querystring);
+           
+           // now run the query
+           client.query(querystring, function (err, result) {
+            done();
+            if (err) {
+              console.log(err);
+              res.status(400).send(err);
+            } else {
+              res.status(200).json(result.rows); // Send the result to the client
+            }
+          });
+    });
+   });
 
 
 
