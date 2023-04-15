@@ -379,9 +379,64 @@ geoJSON.get('/dailyParticipationRates', function (req, res) {
    });
 
 
+/*
+   ------------------------------------------------------
+   -- REFERENCE S2
+   -- Condition App: map layer showing the 5 assets closest to the user’s current location, added by any user.  The layer must be added/removed via a menu option
+   -- Return result as GeoJSON for display purposes
+   -- XXX and YYY are the lat/lng of the user
+   -- note that as this is a geomfromtext situation you can't use the standard $1, $2 for these variables - instead build the query up using strings
+   
+   -- ENDPOINT
+   -- geoJSON.get(/userFiveClosestAssets/:latitude/:longitude, ...
+   
+   -- REMINDER:  use  req.params.xxx;   to get the values
+   
+   
+   
+   SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features  FROM 
+   (SELECT 'Feature' As type     , ST_AsGeoJSON(lg.location)::json As geometry, 
+   row_to_json((SELECT l FROM (SELECT id, asset_name, installation_date) As l 
+    )) As properties
+    FROM   (select c.* from cege0043.asset_information c
+   inner join (select id, st_distance(a.location, st_geomfromtext('POINT(XXXX YYYY)',4326)) as distance
+   from cege0043.asset_information a
+   order by distance asc
+   limit 5) b
+   on c.id = b.id ) as lg) As f
+*/
+geoJSON.get('/userFiveClosestAssets/:latitude/:longitude', function (req, res) {
+    pool.connect(function (err, client, done) {
+      if (err) {
+        console.log("not able to get connection " + err);
+        res.status(400).send(err);
+      }
 
-
-
+       var querystring = "SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features  FROM ";
+      querystring += "(SELECT 'Feature' As type     , ST_AsGeoJSON(lg.location)::json As geometry, ";
+      querystring += "row_to_json((SELECT l FROM (SELECT id, asset_name, installation_date) As l ";
+      querystring += " )) As properties ";
+      querystring += "FROM   (select c.* from cege0043.asset_information c ";
+      querystring += "inner join (select id, st_distance(a.location, st_geomfromtext('POINT("+req.params.longitude+ " "+req.params.latitude +")',4326)) as distance ";
+      querystring += "from cege0043.asset_information a ";
+      querystring += "order by distance asc ";
+      querystring += "limit 5) b ";
+      querystring += "on c.id = b.id ) as lg) As f";
+   
+        console.log(querystring);
+           
+           // now run the query
+           client.query(querystring, function (err, result) {
+            done();
+            if (err) {
+              console.log(err);
+              res.status(400).send(err);
+            } else {
+              res.status(200).json(result.rows); // Send the result to the client
+            }
+          });
+    });
+   });
 
 
 
