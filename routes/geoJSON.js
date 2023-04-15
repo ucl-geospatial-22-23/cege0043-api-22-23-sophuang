@@ -171,6 +171,70 @@ geoJSON.get('/userAssets/:user_id', function (req, res) {
     });
    });
   
+/*
+   -------------------------------------------------------------
+   -- REFERENCE: A3
+   -- Condition App: user is told how many condition reports they have saved, when they add a new condition report (xxxx is the user_id of the particular person)
+   -- $1 is the user_id parameter passed to the query
+   
+   -- ENDPOINT
+   -- geoJSON.get(/userConditionReports/:user_id, ...
+   
+   -- REMINDER:  use  req.params.xxx;   to get the values
+   
+   
+   select array_to_json (array_agg(c))
+   from
+   (SELECT COUNT(*) AS num_reports from cege0043.asset_condition_information where user_id = $1) c;
+*/   
+
+geoJSON.get('/userConditionReports/:user_id', function (req, res) {
+    pool.connect(function (err, client, done) {
+      if (err) {
+        console.log("not able to get connection " + err);
+        res.status(400).send(err);
+      }
+
+      var count = req.params.user_id;
+   
+       // first get a list of the columns that are in the table 
+       // use string_agg to generate a comma separated list that can then be pasted into the next query
+
+
+       var querystring = "select array_to_json (array_agg(c))";
+      querystring += "from";
+      querystring += "(SELECT COUNT(*) AS num_reports from cege0043.asset_condition_information where user_id = $1) c;";
+   
+        console.log(querystring);
+           
+           // now run the query
+           client.query(querystring, [count], function (err, result) {
+            done();
+            if (err) {
+              console.log(err);
+              res.status(400).send(err);
+            } else {
+              res.status(200).json(result.rows); // Send the result to the client
+            }
+          });
+    });
+   });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
