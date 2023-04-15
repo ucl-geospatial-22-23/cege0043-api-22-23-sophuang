@@ -439,10 +439,63 @@ geoJSON.get('/userFiveClosestAssets/:latitude/:longitude', function (req, res) {
    });
 
 
+/*
+   ------------------------------------------------------
+   -- REFERENCE S3
+   -- Condition App: map showing the last 5 reports that the user created (colour coded depending on the conditition rating)
+   -- Return result as GeoJSON
+   -- $1 is the user_id
+   
+   -- ENDPOINT
+   -- geoJSON.get(/lastFiveConditionReports/:user_id, ... 
+   
+   -- REMINDER:  use  req.params.xxx;   to get the values
+   
+   
+   SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features  FROM 
+   (SELECT 'Feature' As type     , ST_AsGeoJSON(lg.location)::json As geometry, 
+   row_to_json((SELECT l FROM (SELECT id,user_id, asset_name, condition_description
+   ) As l 
+    )) As properties
+    FROM 
+   (select * from cege0043.condition_reports_with_text_descriptions 
+   where user_id = $1
+   order by timestamp desc
+   limit 5) as lg) As f
+*/
+geoJSON.get('/lastFiveConditionReports/:user_id', function (req, res) {
+    pool.connect(function (err, client, done) {
+      if (err) {
+        console.log("not able to get connection " + err);
+        res.status(400).send(err);
+      }
+      let user_id = req.params.user_id;
 
-
-
-
+       var querystring = "SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features  FROM ";
+      querystring += "(SELECT 'Feature' As type     , ST_AsGeoJSON(lg.location)::json As geometry, ";
+      querystring += "row_to_json((SELECT l FROM (SELECT id,user_id, asset_name, condition_description";
+      querystring += ") As l ";
+      querystring += ")) As properties ";
+      querystring += "FROM ";
+      querystring += "(select * from cege0043.condition_reports_with_text_descriptions ";
+      querystring += "where user_id = $1 ";
+      querystring += "order by timestamp desc ";
+      querystring += "limit 5) as lg) As f";
+   
+        console.log(querystring);
+           
+           // now run the query
+           client.query(querystring,[user_id], function (err, result) {
+            done();
+            if (err) {
+              console.log(err);
+              res.status(400).send(err);
+            } else {
+              res.status(200).json(result.rows); // Send the result to the client
+            }
+          });
+    });
+   });
 
 
 
