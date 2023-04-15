@@ -332,6 +332,54 @@ geoJSON.get('/assetsInGreatCondition', function (req, res) {
     });
    });
 
+/*
+   ------------------------------------------------------
+   -- REFERENCE L2
+   -- Asset App: graph showing daily reporting rates for the past week (how many reports have been submitted, and how many of these had condition as one of the two 'not working' options) (as a menu option)
+   -- return data as JSON so that it can be used in D3
+   -- For all users
+   
+   -- ENDPOINT
+   -- geoJSON.get(/dailyParticipationRates, ...
+   
+   -- REMINDER:  use  req.params.xxx;   to get the values
+   
+   
+   select  array_to_json (array_agg(c)) from 
+   (select day, sum(reports_submitted) as reports_submitted, sum(not_working) as reports_not_working
+   from cege0043.report_summary
+   group by day) c 
+*/
+
+geoJSON.get('/dailyParticipationRates', function (req, res) {
+    pool.connect(function (err, client, done) {
+      if (err) {
+        console.log("not able to get connection " + err);
+        res.status(400).send(err);
+      }
+
+       var querystring = "select  array_to_json (array_agg(c)) from ";
+      querystring += "(select day, sum(reports_submitted) as reports_submitted, sum(not_working) as reports_not_working ";
+      querystring += "from cege0043.report_summary ";
+      querystring += "group by day) c ";
+   
+        console.log(querystring);
+           
+           // now run the query
+           client.query(querystring, function (err, result) {
+            done();
+            if (err) {
+              console.log(err);
+              res.status(400).send(err);
+            } else {
+              res.status(200).json(result.rows); // Send the result to the client
+            }
+          });
+    });
+   });
+
+
+
 
 
 
