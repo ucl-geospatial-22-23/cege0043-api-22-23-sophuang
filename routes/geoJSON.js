@@ -358,12 +358,6 @@ geoJSON.get('/dailyParticipationRates', function (req, res) {
         res.status(400).send(err);
       }
 
-      var user_id = req.params.user_id;
-   
-       // first get a list of the columns that are in the table 
-       // use string_agg to generate a comma separated list that can then be pasted into the next query
-
-
        var querystring = "select  array_to_json (array_agg(c)) from ";
       querystring += "(select day, sum(reports_submitted) as reports_submitted, sum(not_working) as reports_not_working ";
       querystring += "from cege0043.report_summary ";
