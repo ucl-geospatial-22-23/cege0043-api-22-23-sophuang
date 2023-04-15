@@ -221,9 +221,60 @@ geoJSON.get('/userConditionReports/:user_id', function (req, res) {
    });
 
 
+/*
+   -------------------------------------------------------------
+   -- REFERENCE S1
+   -- Condition App: user is given their ranking (based on condition reports, in comparison to all other users) (as a menu option)
+   -- $1 is the user_id parameter passed to the query
+   
+   -- ENDPOINT
+   -- geoJSON.get(/userRanking/:user_id, ...
+   
+   -- REMINDER:  use  req.params.xxx;   to get the values
+   
+   select array_to_json (array_agg(hh))
+   from
+   (select c.rank from (SELECT b.user_id, rank()over (order by num_reports desc) as rank 
+   from (select COUNT(*) AS num_reports, user_id 
+   from cege0043.asset_condition_information
+   group by user_id) b) c
+   where c.user_id = $1) hh
+*/
+geoJSON.get('/userRanking/:user_id', function (req, res) {
+    pool.connect(function (err, client, done) {
+      if (err) {
+        console.log("not able to get connection " + err);
+        res.status(400).send(err);
+      }
+
+      var user_id = req.params.user_id;
+   
+       // first get a list of the columns that are in the table 
+       // use string_agg to generate a comma separated list that can then be pasted into the next query
 
 
-
+       var querystring = "select array_to_json (array_agg(hh))";
+      querystring += "from";
+      querystring += "(select c.rank from (SELECT b.user_id, rank()over (order by num_reports desc) as rank ";
+      querystring += "from (select COUNT(*) AS num_reports, user_id ";
+      querystring += "from cege0043.asset_condition_information ";
+      querystring += "group by user_id) b) c ";
+      querystring += "where c.user_id = $1) hh";
+   
+        console.log(querystring);
+           
+           // now run the query
+           client.query(querystring, [user_id], function (err, result) {
+            done();
+            if (err) {
+              console.log(err);
+              res.status(400).send(err);
+            } else {
+              res.status(200).json(result.rows); // Send the result to the client
+            }
+          });
+    });
+   });
 
 
 
