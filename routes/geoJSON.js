@@ -544,7 +544,7 @@ geoJSON.get('/conditionReportMissing/:user_id', function (req, res) {
       querystring += "asset_id not in ( ";
       querystring += "select asset_id from cege0043.asset_condition_information ";
       querystring += "where user_id = $1 and ";
-      querystring += "timestamp > NOW()::DATE-EXTRACT(DOW FROM NOW())::INTEGER-3)  ) as lg) As f";
+      querystring += "timestamp > NOW()::DATE-EXTRACT(DOW FROM NOW())::INTEGER-1)  ) as lg) As f";
    
         console.log(querystring);
            
