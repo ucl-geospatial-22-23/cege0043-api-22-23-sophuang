@@ -19,7 +19,8 @@ config[split[0].trim()] = split[1].trim(); }
 let pool = new pg.Pool(config); 
 console.log(config);
 
-const bodyParser = require('body-parser'); crud.use(bodyParser.urlencoded({ extended: true }));
+const bodyParser = require('body-parser'); 
+crud.use(bodyParser.urlencoded({ extended: true }));
 
 
 
@@ -94,12 +95,15 @@ crud.post('/insertAssetPoint', function (req, res) {
         done();
   
         if (err) {
-          console.log(err);
-          res.status(400).send(err);
-        } 
-        else {
-          res.status(200).send("Form Data "+ req.body.asset_name + " has been inserted");
-        }
+            console.log(err);
+            if (err.constraint === "asset_name_unique") {
+              res.status(400).send("Error: Asset Name inserted must be UNIQUE!");
+            } else {
+              res.status(400).send(err);
+            }
+          } else {
+            res.status(200).send("Form Data " + req.body.asset_name + " has been inserted");
+          }
       });
     });
   });
