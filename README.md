@@ -109,4 +109,4 @@ Code for building endpoints adapts the SQL code provided in the module materials
     - `https://YourVMServer/api/userAssets/:user_id`
 
 Replace `:user_id` with your user ID (xxx).
-![image](https://user-images.githubusercontent.com/109146037/234433565-5a61cb7d-3442-46f1-9228-772b8ac435ec.png)
+
